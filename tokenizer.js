@@ -1,7 +1,6 @@
-// tokenizer.js
 class Tokenizer {
     constructor() {
-        // Constants
+        // Define special characters
         this.cBlank = ' ';
         this.cCR = '\r';
         this.cLF = '\n';
@@ -56,14 +55,22 @@ class Tokenizer {
         }
     }
 
-    processContent(content) {
+    processContent(content, keyword) {
         content = content.split(''); // Convert the string content into a character array
+        keyword = keyword.toUpperCase(); // Ensure the keyword is uppercase for comparison
+
         while (content.length > 0) {
             this.getToken(content);
             if (this.token.length === 0) continue;
 
-            console.log(this.token);
+            // Print tokens and search for the keyword
+            if (this.token.includes(keyword)) {
+                console.log(`Keyword "${keyword}" found in token: ${this.token}`);
+            } else {
+                console.log(this.token);
+            }
 
+            // Handle specific tags
             if (this.token.startsWith('<!--')) {
                 console.log("IN COMMENT TAG");
                 do {
@@ -90,5 +97,5 @@ class Tokenizer {
     }
 }
 
-// Export the class to be used in other files
+// Exporting the class so that we can use tokenizer to parse the data used in other files
 module.exports = Tokenizer;
