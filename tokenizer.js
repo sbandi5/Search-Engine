@@ -1,94 +1,77 @@
-// tokenizer.js
 class Tokenizer {
     constructor() {
-        // Constants
-        this.cBlank = ' ';
-        this.cCR = '\r';
-        this.cLF = '\n';
-        this.cTab = '\t';
-
-        this.endHTMLComment = '-->';
-        this.endScript = 'SCRIPT>';
-        this.startH1 = '<H1';
-        this.endH1 = '</H1>';
-        this.startMETA = '<META';
-        this.endAngleBracket = '>';
-        this.startAnchor = '<A';
-        this.endAnchor = '</A>';
-
-        this.token = '';
-        this.ch = this.cBlank;
-        this.maxLen = 1000;
+      this.cBlank = ' ';
+      this.cCR = '\r';
+      this.cLF = '\n';
+      this.cTab = '\t';
+      this.maxLen = 1000;
+      this.token = '';
+      this.ch = this.cBlank;
+      this.openAngle = 0;
+  
+      // Define HTML-like delimiters and tags
+      this.endHTMLComment = "-->";
+      this.endScript = "SCRIPT>";
+      this.startH1 = "<H1";
+      this.endH1 = "</H1>";
+      this.startMETA = "<META";
+      this.endAngleBracket = ">";
+      this.startAnchor = "<A";
+      this.endAnchor = "</A>";
     }
-
+  
     isWhiteSpace(ch) {
-        return (ch === this.cBlank || ch === this.cCR || ch === this.cLF || ch === this.cTab);
+      return (ch === this.cBlank || ch === this.cCR || ch === this.cLF || ch === this.cTab);
     }
-
-    delimiter(c) {
-        return (this.isWhiteSpace(c) || c === '>' || c === null);
+  
+    delimiter(ch) {
+      return (this.isWhiteSpace(ch) || ch === this.endAngleBracket || ch === null);
     }
-
+  
     appendCharToString(ch) {
-        this.token += ch.toUpperCase();
+      if (this.token.length === this.maxLen - 1) {
+        this.maxLen *= 2;
+      }
+      this.token += ch;
     }
-
-    getToken(content) {
-        while (this.delimiter(this.ch) && this.ch !== null) {
-            this.ch = content.shift();
-        }
-
-        if ((this.ch === '"' || this.ch === "'") && this.token.includes('<')) {
-            let c = this.ch;
-            do {
-                this.appendCharToString(this.ch);
-                this.ch = content.shift();
-                if (this.ch === null) return;
-            } while (this.ch !== c);
-            this.appendCharToString(this.ch);
-            this.ch = content.shift();
-            return;
-        }
-
-        while (!this.delimiter(this.ch) && this.ch !== null) {
-            this.appendCharToString(this.ch);
-            this.ch = content.shift();
-        }
-    }
-
-    processContent(content) {
-        content = content.split(''); // Convert the string content into a character array
-        while (content.length > 0) {
-            this.getToken(content);
-            if (this.token.length === 0) continue;
-
-            console.log(this.token);
-
-            if (this.token.startsWith('<!--')) {
-                console.log("IN COMMENT TAG");
-                do {
-                    this.getToken(content);
-                } while (!this.token.endsWith(this.endHTMLComment) && this.token.length !== 0);
-                console.log("OUT OF COMMENT TAG");
-            } else if (this.token.includes('<SCRIPT')) {
-                console.log("IN SCRIPT TAG");
-                do {
-                    this.getToken(content);
-                } while (!this.token.endsWith(this.endScript) && this.token.length !== 0);
-                console.log("OUT OF SCRIPT TAG");
-            } else if (this.token.includes(this.startH1)) {
-                console.log("IN H1 TAG:");
-                do {
-                    console.log(this.token);
-                    this.getToken(content);
-                } while (!this.token.endsWith(this.endH1));
-                console.log("OUT OF H1 TAG " + this.token);
-            } else {
-                this.getToken(content);
+  
+    // Main function to read and process the input while counting occurrences of a keyword
+    processInput(input, keyword) {
+      let tokens = [];
+      let i = 0;
+      let keywordCount = 0;
+      
+      while (i < input.length) {
+        this.ch = input[i];
+  
+        if (this.delimiter(this.ch)) {
+          if (this.token.length > 0) {
+            tokens.push(this.token);
+            
+            // Count keyword occurrences (case-insensitive)
+            if (this.token.toLowerCase() === keyword.toLowerCase()) {
+              keywordCount++;
             }
+  
+            this.token = ''; // Reset token
+          }
+        } else {
+          this.appendCharToString(this.ch);
         }
+        i++;
+      }
+  
+      // Push any last remaining token
+      if (this.token.length > 0) {
+        tokens.push(this.token);
+        
+        // Count keyword occurrences for the last token
+        if (this.token.toLowerCase() === keyword.toLowerCase()) {
+          keywordCount++;
+        }
+      }
+  
+      return { tokens, keywordCount };
     }
-}
-
-// Export the class to be used in other files
-module.exports = Tokenizer;
+  }
+module.exports = Tokenizer;  
