@@ -29,6 +29,7 @@ try {
 
 const urlarr = [];
 const keywordOccuranceInUrl = [];
+const currentKeyWord = [];
 
 // Function to find an available robot (wait until one is free)
 async function assignToAvailableRobot(url, keyword) {
@@ -42,6 +43,7 @@ async function assignToAvailableRobot(url, keyword) {
                 let keyOccurances = await robot.parseWebsite(url, keyword); // Assign the URL to the robot
                 urlarr.push(url);
                 keywordOccuranceInUrl.push(keyOccurances);
+                currentKeyWord.push(keyword);
                 sortAccordingTORank(); // Sort after adding new occurrences
                 assigned = true;
                 break;
@@ -67,6 +69,10 @@ function sortAccordingTORank() {
                 temp = urlarr[i];
                 urlarr[i] = urlarr[j];
                 urlarr[j] = temp;
+
+                temp = currentKeyWord[i];
+                currentKeyWord[i] = currentKeyWord[j];
+                currentKeyWord[j] = temp;
             }
         }
     }
@@ -76,7 +82,7 @@ function sortAccordingTORank() {
 app.get('/', async function (req, res) {
     const keywords = req.query.keywords; 
     const and = req.query.and; 
-
+    const or = req.query.or;
     try {
         // Fetch URLs from the database
         const urls = await databaseConnection.getRobot();
@@ -94,7 +100,14 @@ app.get('/', async function (req, res) {
 
         // Assign URLs to available robots
         for (let url of urls) {
-            await assignToAvailableRobot(url, keywords); // Assign each URL to an available robot
+            if(or == 'on'){
+                keywordsarr =keywords.split(' ');
+                for(let i = 0; i< keywordsarr.length; i++){
+                    await assignToAvailableRobot(url, keywordsarr[i]);
+                }
+            }else{
+                await assignToAvailableRobot(url, keywords); // Assign each URL to an available robot
+            }
         }
 
         // Add logic to display sorted URLs
@@ -102,8 +115,8 @@ app.get('/', async function (req, res) {
 
         databaseConnection.emptyUrlKeyword();
         for (let i = 0; i < urlarr.length; i++) {
-            res.write(`URL: ${urlarr[i]}, Keyword Occurrences: ${keywordOccuranceInUrl[i]}<br>`);
-            databaseConnection.updateUrlKeyword(urlarr[i],keywords,keywordOccuranceInUrl[i]);
+            res.write(`URL: ${urlarr[i]}, Keyword Occurrences: ${keywordOccuranceInUrl[i]}\n`);
+            databaseConnection.updateUrlKeyword(urlarr[i],currentKeyWord[i],keywordOccuranceInUrl[i]);
         }
 
 
