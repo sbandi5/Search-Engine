@@ -40,8 +40,12 @@ class Database {
 
        for(let i=0; i< weburl.length;i++){
         this.databaseDetails.query(qu,[weburl[i]],err=>{
-            if(err) throw err;
-            else console.log('Database updated');
+            if(err){
+                console.log('error updating the robotUrl');
+
+            }else{
+                console.log('Database updated');
+            } 
            });
        }
     }
@@ -61,6 +65,25 @@ class Database {
                     }
                 }
             });
+        });
+    }
+    updateUrlKeyword(url,keyword, rank){
+        this.databaseDetails.query('insert into urlKeyword(url,keyword,rank) values (?,?,?)', [url,keyword,rank], err =>{
+            if(err){
+                console.log('error updating the urlKeyword');
+            }else{
+                console.log('succesfully updated the urlKeyword');
+            }
+        })
+    }
+
+    emptyUrlKeyword(){
+        this.databaseDetails.query('TRUNCATE urlKeyword', err=>{
+            if(err){
+                throw err;
+            }else{
+                console.log('Succesfully cleared the urlKeyword');
+            }
         });
     }
 }

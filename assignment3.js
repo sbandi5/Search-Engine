@@ -27,6 +27,9 @@ try {
     process.exit(1); // Exit process if the certificates are not available
 }
 
+const urlarr = [];
+const keywordOccuranceInUrl = [];
+
 // Function to find an available robot (wait until one is free)
 async function assignToAvailableRobot(url, keyword) {
     let assigned = false;
@@ -36,13 +39,35 @@ async function assignToAvailableRobot(url, keyword) {
         for (let robot of robots) {
             if (!robot.isBusy) { // Check if the robot is not busy
                 console.log(`Assigning URL: ${url} to a robot.`);
-                await robot.parseWebsite(url, keyword); // Assign the URL to the robot
+                let keyOccurances = await robot.parseWebsite(url, keyword); // Assign the URL to the robot
+                urlarr.push(url);
+                keywordOccuranceInUrl.push(keyOccurances);
+                sortAccordingTORank(); // Sort after adding new occurrences
                 assigned = true;
                 break;
             }
         }
         if (!assigned) {
             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+        }
+    }
+}
+
+// Sort URLs according to the number of keyword occurrences in descending order
+function sortAccordingTORank() {
+    for (let i = 0; i < keywordOccuranceInUrl.length - 1; i++) {
+        for (let j = i + 1; j < keywordOccuranceInUrl.length; j++) {
+            if (keywordOccuranceInUrl[i] < keywordOccuranceInUrl[j]) {
+                // Sorting according to the keyword occurrences
+                let temp = keywordOccuranceInUrl[i];
+                keywordOccuranceInUrl[i] = keywordOccuranceInUrl[j];
+                keywordOccuranceInUrl[j] = temp;
+
+                // Sorting the URL as well
+                temp = urlarr[i];
+                urlarr[i] = urlarr[j];
+                urlarr[j] = temp;
+            }
         }
     }
 }
@@ -71,6 +96,16 @@ app.get('/', async function (req, res) {
         for (let url of urls) {
             await assignToAvailableRobot(url, keywords); // Assign each URL to an available robot
         }
+
+        // Add logic to display sorted URLs
+        res.write('Sorted URLs based on keyword occurrences:<br>');
+
+        databaseConnection.emptyUrlKeyword();
+        for (let i = 0; i < urlarr.length; i++) {
+            res.write(`URL: ${urlarr[i]}, Keyword Occurrences: ${keywordOccuranceInUrl[i]}<br>`);
+            databaseConnection.updateUrlKeyword(urlarr[i],keywords,keywordOccuranceInUrl[i]);
+        }
+
 
         res.end();
     } catch (err) {
