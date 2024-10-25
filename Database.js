@@ -35,6 +35,7 @@ class Database {
             }
         });
     }
+    // methods for roboturl table
     updateRobot(weburl){
        let qu = 'Insert into robotUrl values (?)';
 
@@ -67,8 +68,9 @@ class Database {
             });
         });
     }
+    // methods for urlKeyword table
     updateUrlKeyword(url,keyword, rank){
-        this.databaseDetails.query('insert into urlKeyword(url,keyword,rank) values (?,?,?)', [url,keyword,rank], err =>{
+        this.databaseDetails.query('insert into urlKeyword values (?,?,?)', [url,keyword,rank], err =>{
             if(err){
                 console.log('error updating the urlKeyword');
             }else{
@@ -85,6 +87,26 @@ class Database {
                 console.log('Succesfully cleared the urlKeyword');
             }
         });
+    }
+    // methods for the urlDescription table
+    emptyUrlDescription(){
+        this.databaseDetails.query('TRUNCATE urlDescription', err=>{
+            if(err){
+                throw err;
+            }else{
+                console.log('Succesfully cleared the urlDescription');
+            }
+        });
+    }
+
+    updateUrlDescription(url,description){
+        this.databaseDetails.query('insert into urlDescription values (?,?)', [url, description], err =>{
+            if(err){
+                console.log('error updating the urlDescription');
+            }else{
+                console.log('successfully updated the urlDescription')
+            }
+        })
     }
 }
 

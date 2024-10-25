@@ -11,24 +11,26 @@ class Robot {
         this.databaseconnection.connect();
         this.url = [];
         this.keywordInUrl = [];
+        this.keywordRank = 0;
     }
 
     async parseWebsite(Weburl,keywords) {
         this.isBusy = true;
-        let keywordCount = 0;
+        
         try {
             let response = await axios.get(Weburl);
             let root = html_parser.parse(response.data);
-            let {tokens , keywordCount} = this.t.processInput(root.toString(), keywords);
-            console.log(tokens + '\n');
+            let {description, keywordCount} = this.t.processInput(root.toString(), keywords);
+            this.keywordRank = keywordCount;
             console.log('The no of times '+ keywords+ ' occured in the '+Weburl+' is '+ keywordCount);
+            console.log('Description is:'+ description);
             
 
         } catch (error) {
             console.error("Error fetching the website:", error);
         } finally {
             this.isBusy = false;
-            return keywordCount;
+            return this.keywordRank;
         }
     }
 
