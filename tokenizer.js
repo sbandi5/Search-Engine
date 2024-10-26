@@ -6,28 +6,19 @@ class Tokenizer {
     this.cTab = '\t';
     this.maxLen = 200;
     this.token = '';
+    this.description = '';
     this.ch = this.cBlank;
-    this.openAngle = 0;
-
-    // Define HTML-like delimiters and tags
-    this.endHTMLComment = "-->";
-    this.endScript = "SCRIPT>";
-    this.startH1 = "<H1";
-    this.endH1 = "</H1>";
-    this.startMETA = "<META";
-    this.endAngleBracket = ">";
-    this.startAnchor = "<A";
-    this.endAnchor = "</A>";
+    this.inTag = false;
+    this.currentTag = '';
+    this.baseURL = ''; // Store the base URL for converting relative links to absolute
   }
 
+  // Helper function to determine if a character is whitespace
   isWhiteSpace(ch) {
     return (ch === this.cBlank || ch === this.cCR || ch === this.cLF || ch === this.cTab);
   }
 
-  delimiter(ch) {
-    return (this.isWhiteSpace(ch) || ch === this.endAngleBracket || ch === null);
-  }
-
+  // Helper function to append characters to the token
   appendCharToString(ch) {
     if (this.token.length === this.maxLen - 1) {
       this.maxLen *= 2;
@@ -35,73 +26,100 @@ class Tokenizer {
     this.token += ch;
   }
 
-  // Helper function to check if we're inside a tag
-  isInsideTag() {
-    return this.openAngle > 0;
+  // Converts a relative link to an absolute link using the base URL
+  toAbsoluteURL(base, relative) {
+    try {
+      return new URL(relative, base).href;
+    } catch (e) {
+      return relative; // If URL parsing fails, return the relative URL
+    }
   }
 
-  // Main function to read and process the input while counting occurrences of a keyword and extracting description
-  processInput(input, keyword) {
+  // Main function to read and process the input while counting occurrences of a keyword and extracting links and description
+  processInput(input, keyword, baseURL) {
     let tokens = [];
-    let description = '';
-    let i = 0;
+    let links = [];
     let keywordCount = 0;
-    let insideTag = false;
-    let ignoreContent = false;
-    let currentTag = '';
+    let i = 0;
+    this.baseURL = baseURL;
+    let descriptionLength = 0;
+    
+    // Reset the description before processing a new document
+    this.description = ''; 
 
     while (i < input.length) {
       this.ch = input[i];
 
-      // Track if we are inside a tag
       if (this.ch === '<') {
-        insideTag = true;
-        currentTag = '';
-        ignoreContent = false;
-      } else if (this.ch === '>') {
-        insideTag = false;
-        // Check for specific tags to ignore their content (like <script>)
-        if (currentTag.toLowerCase().includes('script') || currentTag.toLowerCase().includes('style')) {
-          ignoreContent = true;
-        }
-      } else if (insideTag) {
-        currentTag += this.ch;
-      } else if (!ignoreContent) {
-        // If we're not inside a tag and not ignoring content, process character
-        if (!this.delimiter(this.ch)) {
-          this.appendCharToString(this.ch);
-          // Collect description up to 200 characters, ignoring tags
-          if (description.length < 200) {
-            description += this.ch;
-          }
-        } else {
-          if (this.token.length > 0) {
-            // Store and reset the token
-            tokens.push(this.token);
+        this.inTag = true;
+        this.currentTag = '';
 
-            // Count keyword occurrences (case-insensitive)
-            if (this.token.toLowerCase() === keyword.toLowerCase()) {
-              keywordCount++;
-            }
-            this.token = ''; // Reset token
+        // Check if the token contains the keyword (case-insensitive)
+        if (this.token.length > 0 && this.token.toLowerCase() === keyword.toLowerCase()) {
+          keywordCount++;
+        }
+
+        this.token = ''; // Reset token for processing tag contents
+      }
+
+      if (this.inTag) {
+        this.currentTag += this.ch;
+        if (this.ch === '>') {
+          this.inTag = false;
+
+          // Check for anchor tags to extract links
+          const anchorMatch = this.currentTag.match(/<a[^>]*href="([^"]*)"/i);
+          if (anchorMatch) {
+            const absoluteLink = this.toAbsoluteURL(this.baseURL, anchorMatch[1]);
+            links.push(absoluteLink);
           }
+
+          // Check if current tag is for description content (title, h1-h6, p, span)
+          const isDescriptionTag = this.currentTag.match(/<(title|h\d|p|span)[^>]*>/i);
+          if (isDescriptionTag && descriptionLength < 200) {
+            // Extract description outside of tags
+            i++;
+            while (i < input.length && input[i] !== '<' && descriptionLength < 200) {
+              this.description += input[i];
+              descriptionLength++;
+              i++;
+            }
+            i--; // Step back to handle the next iteration correctly
+          }
+
+          this.currentTag = ''; // Reset the current tag
+        }
+      } else {
+        // If not inside a tag, continue processing text content
+        if (!this.isWhiteSpace(this.ch)) {
+          this.appendCharToString(this.ch);
+        }
+
+        // Check if the token contains the keyword (case-insensitive)
+        if (this.token.length > 0 && this.isWhiteSpace(this.ch)) {
+          tokens.push(this.token);
+          if (this.token.toLowerCase() === keyword.toLowerCase()) {
+            keywordCount++;
+          }
+          this.token = ''; // Reset token
         }
       }
       i++;
     }
 
-    // Push any last remaining token
+    // Process any remaining token
     if (this.token.length > 0) {
       tokens.push(this.token);
-
-      // Count keyword occurrences for the last token
       if (this.token.toLowerCase() === keyword.toLowerCase()) {
         keywordCount++;
       }
     }
 
-    // Return extracted description and keyword count
-    return { description, keywordCount };
+    return {
+      description: this.description.trim(),
+      keywordCount,
+      links
+    };
   }
 }
 

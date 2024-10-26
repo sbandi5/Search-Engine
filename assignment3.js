@@ -14,7 +14,17 @@ const robots = [robot1, robot2, robot3];
 
 const databaseConnection = Database.getInstance();
 databaseConnection.connect();
+databaseConnection.emptyRobot();
+databaseConnection.emptyUrlDescription();
+const startingurls = [
+    'https://www.emich.edu/index.php', 
+    'https://umich.edu/', 
+    'https://www.mlive.com/'
+];
 
+for (let url of startingurls) {
+    databaseConnection.updateRobot(url);
+}
 // Load certificate files with error handling
 let certs;
 try {
@@ -27,9 +37,9 @@ try {
     process.exit(1); // Exit process if the certificates are not available
 }
 
-const urlarr = [];
-const keywordOccuranceInUrl = [];
-const currentKeyWord = [];
+let urlarr = [];
+let keywordOccuranceInUrl = [];
+let currentKeyWord = [];
 
 // Function to find an available robot (wait until one is free)
 async function assignToAvailableRobot(url, keyword) {
@@ -79,46 +89,44 @@ function sortAccordingTORank() {
 }
 
 // Route for handling requests to fetch URLs
+// Route for handling requests to fetch URLs
 app.get('/', async function (req, res) {
-    const keywords = req.query.keywords; 
-    const and = req.query.and; 
+    const keywords = req.query.keywords;
+    const and = req.query.and;
     const or = req.query.or;
+
+    // Clear old results on each new request
+    urlarr = [];
+    keywordOccuranceInUrl = [];
+    currentKeyWord = [];
+    
+
     try {
         // Fetch URLs from the database
-        const urls = await databaseConnection.getRobot();
+        let pos = 1
+        let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
-        if (urls.length === 0) {
-            res.write('No URLs found in the database.<br>');
-            res.end();
-            return;
-        }
-
-        // Write response data
-        res.write('The "and" parameter is: ' + and + '<br>');
-        res.write('The keywords are: ' + keywords + '<br><br>');
-        res.write('Fetched URLs from the database:<br>');
-
-        // Assign URLs to available robots
-        for (let url of urls) {
-            if(or == 'on'){
-                keywordsarr =keywords.split(' ');
-                for(let i = 0; i< keywordsarr.length; i++){
-                    await assignToAvailableRobot(url, keywordsarr[i]);
+        while (url != null) {
+            if (or === 'on') {
+                let keywordsArr = keywords.split(' ');
+                for (let keyword of keywordsArr) {
+                    await assignToAvailableRobot(url, keyword);
                 }
-            }else{
+            } else {
                 await assignToAvailableRobot(url, keywords); // Assign each URL to an available robot
             }
+            pos++
+            url = await databaseConnection.getRobot(pos); // Fetch the next URL
         }
 
         // Add logic to display sorted URLs
-        res.write('Sorted URLs based on keyword occurrences:<br>');
+        res.write('Sorted URLs based on keyword occurrences:\n');
 
         databaseConnection.emptyUrlKeyword();
         for (let i = 0; i < urlarr.length; i++) {
             res.write(`URL: ${urlarr[i]}, Keyword Occurrences: ${keywordOccuranceInUrl[i]}\n`);
-            databaseConnection.updateUrlKeyword(urlarr[i],currentKeyWord[i],keywordOccuranceInUrl[i]);
+            databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
         }
-
 
         res.end();
     } catch (err) {
@@ -126,6 +134,7 @@ app.get('/', async function (req, res) {
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
     }
 });
+
 
 // Create an HTTPS server and start listening on the port
 https.createServer(certs, app).listen(12346, () => {

@@ -20,11 +20,15 @@ class Robot {
         try {
             let response = await axios.get(Weburl);
             let root = html_parser.parse(response.data);
-            let {description, keywordCount} = this.t.processInput(root.toString(), keywords);
+            let {description, keywordCount, links} = this.t.processInput(root.toString(), keywords);
             this.keywordRank = keywordCount;
-            console.log('The no of times '+ keywords+ ' occured in the '+Weburl+' is '+ keywordCount);
-            console.log('Description is:'+ description);
-            
+            console.log('The no of times '+ keywords+ ' occured in the '+Weburl+' is '+ keywordCount +'\n');
+            console.log('Description is:'+ description + '\n');
+            for(let url in links){
+                this.databaseconnection.updaterobot(url);
+            }
+            this.databaseconnection.emptyUrlDescription();
+            this.databaseconnection.updateUrlDescription(Weburl, description);
 
         } catch (error) {
             console.error("Error fetching the website:", error);

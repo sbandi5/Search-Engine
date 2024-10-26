@@ -29,84 +29,110 @@ class Database {
     connect() {
         this.databaseDetails.connect(err => {
             if (err) {
+                console.error('Database connection failed:', err);
                 throw err;
             } else {
                 console.log('Database connected');
             }
         });
     }
-    // methods for roboturl table
-    updateRobot(weburl){
-       let qu = 'Insert into robotUrl values (?)';
 
-       for(let i=0; i< weburl.length;i++){
-        this.databaseDetails.query(qu,[weburl[i]],err=>{
-            if(err){
-                console.log('error updating the robotUrl');
-
-            }else{
-                console.log('Database updated');
-            } 
-           });
-       }
+    // Methods for roboturl table
+    // Method to update robot URL table only if the URL is not already present
+    updateRobot(weburl) {
+        // First, check if the URL already exists in the table
+        const queryCheck = 'SELECT COUNT(*) AS count FROM robotUrl WHERE url = ?';
+        this.databaseDetails.query(queryCheck, [weburl], (err, results) => {
+            if (err) {
+                console.log('Error checking for URL existence:', err);
+            } else {
+                if (results[0].count === 0) {
+                    // If the URL is not found, insert it into the table
+                    const queryInsert = 'INSERT INTO robotUrl (url) VALUES (?)';
+                    this.databaseDetails.query(queryInsert, [weburl], (err) => {
+                        if (err) {
+                            console.log('Error updating the robotUrl:', err);
+                        } else {
+                            console.log('Database updated with new URL.');
+                        }
+                    });
+                } else {
+                    console.log('URL already exists in the database.');
+                }
+            }
+        });
     }
 
+
     // Method to get robot URLs from the database using Promises
-    getRobot() {
+    async getRobot(pos) {
+        const query = 'SELECT url FROM robotUrl WHERE pos = ?';
         return new Promise((resolve, reject) => {
-            this.databaseDetails.query('SELECT url FROM robotUrl', (err, results) => {
-                if (err) {
-                    reject(err); // Reject the promise if there's an error
-                } else {
-                    if (!results || results.length === 0) {
-                        resolve([]); // Resolve with an empty array if no results
-                    } else {
-                        const urls = results.map(row => row.url); // Extract URLs
-                        resolve(urls); // Resolve with the URLs
-                    }
+            this.databaseDetails.query(query, [pos], (error, results) => {
+                if (error) {
+                    return reject(error);
                 }
+                // Resolve with the URL or null if not found
+                const url = results.length > 0 ? results[0].url : null;
+                resolve(url);
             });
         });
     }
-    // methods for urlKeyword table
-    updateUrlKeyword(url,keyword, rank){
-        this.databaseDetails.query('insert into urlKeyword values (?,?,?)', [url,keyword,rank], err =>{
-            if(err){
-                console.log('error updating the urlKeyword');
-            }else{
-                console.log('succesfully updated the urlKeyword');
-            }
-        })
-    }
 
-    emptyUrlKeyword(){
-        this.databaseDetails.query('TRUNCATE urlKeyword', err=>{
-            if(err){
-                throw err;
-            }else{
-                console.log('Succesfully cleared the urlKeyword');
+    // Methods for urlKeyword table
+    updateUrlKeyword(url, keyword, rank) {
+        const query = 'INSERT INTO urlKeyword VALUES (?,?,?)';
+        this.databaseDetails.query(query, [url, keyword, rank], err => {
+            if (err) {
+                console.error('Error updating the urlKeyword:', err);
+            } else {
+                console.log('Successfully updated the urlKeyword');
             }
         });
     }
-    // methods for the urlDescription table
-    emptyUrlDescription(){
-        this.databaseDetails.query('TRUNCATE urlDescription', err=>{
-            if(err){
+    emptyRobot() {
+        this.databaseDetails.query('TRUNCATE robotUrl', err => {
+            if (err) {
+                console.error('Error emptying robotUrl table:', err);
                 throw err;
-            }else{
-                console.log('Succesfully cleared the urlDescription');
+            } else {
+                console.log('Successfully cleared the robotUrl table');
             }
         });
     }
 
-    updateUrlDescription(url,description){
-        this.databaseDetails.query('insert into urlDescription values (?,?)', [url, description], err =>{
-            if(err){
-                console.log('error updating the urlDescription');
-            }else{
-                console.log('successfully updated the urlDescription')
+    emptyUrlKeyword() {
+        this.databaseDetails.query('TRUNCATE urlKeyword', err => {
+            if (err) {
+                console.error('Error emptying urlKeyword table:', err);
+                throw err;
+            } else {
+                console.log('Successfully cleared the urlKeyword table');
             }
-        })
+        });
+    }
+
+    // Methods for the urlDescription table
+    emptyUrlDescription() {
+        this.databaseDetails.query('TRUNCATE urlDescription', err => {
+            if (err) {
+                console.error('Error emptying urlDescription table:', err);
+                throw err;
+            } else {
+                console.log('Successfully cleared the urlDescription table');
+            }
+        });
+    }
+
+    updateUrlDescription(url, description) {
+        const query = 'INSERT INTO urlDescription VALUES (?,?)';
+        this.databaseDetails.query(query, [url, description], err => {
+            if (err) {
+                console.error('Error updating the urlDescription:', err);
+            } else {
+                console.log('Successfully updated the urlDescription');
+            }
+        });
     }
 }
 
