@@ -105,7 +105,7 @@ app.get('/', async function (req, res) {
         let pos = 1
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
-        while (url != null) {
+        while (url != null && pos <= 30) {
             if (searchType === 'and') {
 
                 await assignToAvailableRobot(url, keywords);

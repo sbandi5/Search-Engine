@@ -24,9 +24,8 @@ class Robot {
             console.log('The no of times '+ keywords+ ' occured in the '+Weburl+' is '+ keywordCount +'\n');
             console.log('Description is:'+ description + '\n');
             for(let i =0; i<  links.length ; i++){
-                this.databaseconnection.updaterobot(links[i]);
+                this.databaseconnection.updateRobot(links[i]);
             }
-            this.databaseconnection.emptyUrlDescription();
             this.databaseconnection.updateUrlDescription(Weburl, description);
 
         } catch (error) {
