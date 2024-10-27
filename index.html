@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,3 +61,67 @@
     </section>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Engine</title>
+    <style>
+        .formdiv {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .bodydiv {
+            background-color: rgb(111, 192, 181);
+            margin: 0;
+        }
+        .imgclass {
+            height: 20%;
+            width: 30vw;
+        }
+        input[type="text"] {
+            background-color: rgb(245, 245, 245);
+            background-repeat: no-repeat;
+            background-size: 35px 38px; 
+            padding: 10px 10px 10px 40px;
+            font-size: 16px;
+            width: 35vw;
+            margin: 10px 0;
+        }
+        
+        input[type="radio"] {
+            margin: 0 5px;
+        }
+        input[type="submit"] {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: white;
+        }
+        input[type= "submit"]:hover{
+            background-color: rgb(243, 195, 62);
+        }
+    </style>
+</head>
+<body class="bodydiv">
+    <section class="formdiv">
+        <img class="imgclass" src="logo.png" alt="error loading pic">
+        <form action="https://www.saimanikiranbandi.com:12346" method="get">
+            <label for="keywords"></label>
+            <input type="text" name="keywords" id="keywords" placeholder="Enter keywords to search">
+            
+            <input type="radio" name="searchType" id="and" value="and">
+            <label for="and">AND</label>
+            <input type="radio" name="searchType" id="or" value="or">
+            <label for="or">OR</label>
+            
+            <input type="submit" value="Search">
+        </form>
+    </section>
+</body>
+</html>
+>>>>>>> d464917 (created a search engine)
