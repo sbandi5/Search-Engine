@@ -17,8 +17,8 @@ databaseConnection.connect();
 databaseConnection.emptyRobot();
 databaseConnection.emptyUrlDescription();
 const startingurls = [
-    'https://www.emich.edu/index.php',
-    'https://umich.edu/',
+    'https://www.emich.edu/index.php', 
+    'https://umich.edu/', 
     'https://www.mlive.com/'
 ];
 
@@ -98,14 +98,14 @@ app.get('/', async function (req, res) {
     urlarr = [];
     keywordOccuranceInUrl = [];
     currentKeyWord = [];
-
+    
 
     try {
         // Fetch URLs from the database
         let pos = 1
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
-        while (url != null && pos <= 30) {
+        while (url != null && pos <= 20) {
             if (searchType === 'and') {
 
                 await assignToAvailableRobot(url, keywords);

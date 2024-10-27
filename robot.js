@@ -1,3 +1,4 @@
+
 const axios = require('axios');
 const html_parser = require('node-html-parser');
 const Tokenizer = require('./tokenizer'); 
@@ -23,7 +24,7 @@ class Robot {
             this.keywordRank = keywordCount;
             console.log('The no of times '+ keywords+ ' occured in the '+Weburl+' is '+ keywordCount +'\n');
             console.log('Description is:'+ description + '\n');
-            for(let i =0; i<  links.length ; i++){
+            for(let i =0; i< links.length; i++){
                 this.databaseconnection.updateRobot(links[i]);
             }
             this.databaseconnection.updateUrlDescription(Weburl, description);
