@@ -68,8 +68,8 @@ class Database {
     async getRobot(pos) {
         const query = 'SELECT url FROM robotUrl WHERE pos = ?';
         return new Promise((resolve, reject) => {
-            this.databaseDetails.query(query, [pos], (error, results) => {
-                if (error) {
+            this.databaseDetails.query(query, [pos], (err, results) => {
+                if (err) {
                     return reject(error);
                 }
                 // Resolve with the URL or null if not found
@@ -133,6 +133,17 @@ class Database {
                 console.log('Successfully updated the urlDescription');
             }
         });
+    }
+
+    async SearchResultsQuery(){
+        return new Promise((resolve, reject) => {
+            this.databaseDetails.query('select uk.url,ud.description,uk.rank from urlKeyword uk JOIN urlDescription ud ON uk.url = ud.url',(err,results)=>{
+                if (err) {
+                    return reject(err);
+                }
+                resolve(results);
+            })
+        })
     }
 }
 

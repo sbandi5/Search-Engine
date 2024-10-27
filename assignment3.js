@@ -16,6 +16,7 @@ const databaseConnection = Database.getInstance();
 databaseConnection.connect();
 databaseConnection.emptyRobot();
 databaseConnection.emptyUrlDescription();
+databaseConnection.emptyUrlKeyword();
 const startingurls = [
     'https://www.emich.edu/index.php', 
     'https://umich.edu/', 
@@ -122,13 +123,13 @@ app.get('/', async function (req, res) {
 
         // Add logic to display sorted URLs
         res.write('Sorted URLs based on keyword occurrences:\n');
+	 const searchResults = await databaseConnection.SearchResultsQuery();
 
-        databaseConnection.emptyUrlKeyword();
-        for (let i = 0; i < urlarr.length; i++) {
-            res.write(`URL: ${urlarr[i]}, Keyword Occurrences: ${keywordOccuranceInUrl[i]}\n`);
-            databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
-        }
-
+        // Iterate through the results and write them to the response
+        searchResults.forEach(element => {
+	    res.write('entered the loop');
+	    res.write( element.url +','+ element.description);
+        });
         res.end();
     } catch (err) {
         console.error("Error during processing:", err);
