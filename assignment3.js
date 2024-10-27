@@ -17,8 +17,8 @@ databaseConnection.connect();
 databaseConnection.emptyRobot();
 databaseConnection.emptyUrlDescription();
 const startingurls = [
-    'https://www.emich.edu/index.php', 
-    'https://umich.edu/', 
+    'https://www.emich.edu/index.php',
+    'https://umich.edu/',
     'https://www.mlive.com/'
 ];
 
@@ -92,14 +92,13 @@ function sortAccordingTORank() {
 // Route for handling requests to fetch URLs
 app.get('/', async function (req, res) {
     const keywords = req.query.keywords;
-    const and = req.query.and;
-    const or = req.query.or;
+    const searchType = req.query.searchType;
 
     // Clear old results on each new request
     urlarr = [];
     keywordOccuranceInUrl = [];
     currentKeyWord = [];
-    
+
 
     try {
         // Fetch URLs from the database
@@ -107,13 +106,15 @@ app.get('/', async function (req, res) {
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
         while (url != null) {
-            if (or === 'on') {
+            if (searchType === 'and') {
+
+                await assignToAvailableRobot(url, keywords);
+
+            } else {
                 let keywordsArr = keywords.split(' ');
                 for (let keyword of keywordsArr) {
                     await assignToAvailableRobot(url, keyword);
                 }
-            } else {
-                await assignToAvailableRobot(url, keywords); // Assign each URL to an available robot
             }
             pos++
             url = await databaseConnection.getRobot(pos); // Fetch the next URL
