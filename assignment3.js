@@ -1,3 +1,4 @@
+
 const https = require('https');
 const express = require('express');
 const app = express();
@@ -5,6 +6,10 @@ const Database = require('./Database.js');
 const Robot = require('./robot.js');
 const fs = require('fs');
 const path = require('path');
+const ejs = require('ejs');
+app.set('view engine', ejs);
+
+app.set('views', path.join('/var/www/html/assignment3/', 'viewa'));
 
 // Instantiate three robots
 const robot1 = new Robot();
@@ -123,18 +128,19 @@ app.get('/', async function (req, res) {
 
         // Add logic to display sorted URLs
         res.write('Sorted URLs based on keyword occurrences:\n');
-	 const searchResults = await databaseConnection.SearchResultsQuery();
+	for (let i = 0; i < urlarr.length; i++) {
+            databaseConnection.updateUrlKeyword(urlarr[i],currentKeyWord[i],keywordOccuranceInUrl[i]);
+        }
+	const searchResults = await databaseConnection.SearchResultsQuery();
 
         // Iterate through the results and write them to the response
-        searchResults.forEach(element => {
-	    res.write('entered the loop');
-	    res.write( element.url +','+ element.description);
-        });
-        res.end();
+        res.render('SearchEngine', { results: searchResults });
+        
     } catch (err) {
         console.error("Error during processing:", err);
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
     }
+    res.end();
 });
 
 
@@ -142,3 +148,5 @@ app.get('/', async function (req, res) {
 https.createServer(certs, app).listen(12346, () => {
     console.log('Listening on port 12346');
 });
+
+

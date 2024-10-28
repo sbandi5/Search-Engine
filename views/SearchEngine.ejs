@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results</h1>
+    <table border="1">
+        <tr>
+            <th>URL</th>
+            <th>Description</th>
+            <th>Rank</th>
+        </tr>
+        <% results.forEach(function(result) { %>
+            <tr>
+                <td><a href="<%= result.url %>"><%= result.url %></a></td>
+                <td><%= result.description %></td>
+                <td><%= result.rank %></td>
+            </tr>
+        <% }); %>
+    </table>
+</body>
+</html>
