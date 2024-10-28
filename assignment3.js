@@ -7,9 +7,9 @@ const Robot = require('./robot.js');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-app.set('view engine', ejs);
+app.set('view engine', 'ejs');
 
-app.set('views', path.join('/var/www/html/assignment3/', 'viewa'));
+app.set('views', path.join('/var/www/html/assignment3/', 'views'));
 
 // Instantiate three robots
 const robot1 = new Robot();
@@ -94,8 +94,6 @@ function sortAccordingTORank() {
     }
 }
 
-// Route for handling requests to fetch URLs
-// Route for handling requests to fetch URLs
 app.get('/', async function (req, res) {
     const keywords = req.query.keywords;
     const searchType = req.query.searchType;
@@ -104,45 +102,39 @@ app.get('/', async function (req, res) {
     urlarr = [];
     keywordOccuranceInUrl = [];
     currentKeyWord = [];
-    
 
     try {
         // Fetch URLs from the database
-        let pos = 1
+        let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
         while (url != null && pos <= 20) {
             if (searchType === 'and') {
-
                 await assignToAvailableRobot(url, keywords);
-
             } else {
                 let keywordsArr = keywords.split(' ');
                 for (let keyword of keywordsArr) {
                     await assignToAvailableRobot(url, keyword);
                 }
             }
-            pos++
+            pos++;
             url = await databaseConnection.getRobot(pos); // Fetch the next URL
         }
 
-        // Add logic to display sorted URLs
-        res.write('Sorted URLs based on keyword occurrences:\n');
-	for (let i = 0; i < urlarr.length; i++) {
-            databaseConnection.updateUrlKeyword(urlarr[i],currentKeyWord[i],keywordOccuranceInUrl[i]);
+        // Update keyword occurrences in the database
+        for (let i = 0; i < urlarr.length; i++) {
+            databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
         }
-	const searchResults = await databaseConnection.SearchResultsQuery();
-
-        // Iterate through the results and write them to the response
-        res.render('SearchEngine', { results: searchResults });
         
+        // Fetch and render search results
+        const searchResults = await databaseConnection.SearchResultsQuery();
+        res.render('SearchEngine', { results: searchResults });
+
     } catch (err) {
         console.error("Error during processing:", err);
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
     }
-    res.end();
 });
-
 
 // Create an HTTPS server and start listening on the port
 https.createServer(certs, app).listen(12346, () => {
