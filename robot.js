@@ -18,7 +18,9 @@ class Robot {
         this.isBusy = true;
         
         try {
-            let response = await axios.get(Weburl);
+	    let response = await axios.get(Weburl, {
+    		maxRedirects: 0  // Set maximum redirects
+  	    });
             let root = html_parser.parse(response.data);
             let {description, keywordCount, links} = this.t.processInput(root.toString(), keywords);
             this.keywordRank = keywordCount;
