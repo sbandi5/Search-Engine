@@ -1,9 +1,9 @@
-
 const https = require('https');
 const express = require('express');
 const app = express();
 const Database = require('./Database.js');
 const Robot = require('./robot.js');
+const puppeteer = require('./puppeteer.js');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
@@ -11,19 +11,25 @@ app.set('view engine', 'ejs');
 
 app.set('views', path.join('/var/www/html/assignment3/', 'views'));
 
-// Instantiate three robots
+const puppeteerRobot = new puppeteer();
 const robot1 = new Robot();
 const robot2 = new Robot();
 const robot3 = new Robot();
-const robots = [robot1, robot2, robot3];
-
+const robot4 = new Robot();
+const robot5 = new Robot();
+const robot6 = new Robot();
+const robot7 = new Robot();
+const robot8 = new Robot();
+const robot9 = new Robot();
+const robot10 = new Robot();
+const robots = [robot1, robot2, robot3,robot4,robot5,robot6,robot7,robot8,robot9,robot10];
 const databaseConnection = Database.getInstance();
 databaseConnection.connect();
 databaseConnection.emptyRobot();
 databaseConnection.emptyUrlDescription();
 databaseConnection.emptyUrlKeyword();
 const startingurls = [
-    'https://www.emich.edu/index.php', 
+    'https://www.emich.edu/', 
     'https://umich.edu/', 
     'https://www.mlive.com/'
 ];
@@ -51,6 +57,15 @@ let currentKeyWord = [];
 async function assignToAvailableRobot(url, keyword) {
     let assigned = false;
 
+    if (url.includes('emich.edu')) {
+        console.log(`Assigning URL: ${url} to Puppeteer.`);
+        let keyOccurrences = await puppeteerRobot.parseWebsite(url, keyword);
+        urlarr.push(url);
+        keywordOccuranceInUrl.push(keyOccurrences);
+        currentKeyWord.push(keyword);
+        sortAccordingTORank(); // Sort after adding new occurrences
+        return;
+    }
     // Avoid indefinite loop; use setTimeout for retries instead of blocking
     while (!assigned) {
         for (let robot of robots) {
@@ -108,7 +123,7 @@ app.get('/', async function (req, res) {
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
 
-        while (url != null && pos <= 20) {
+        while (url != null && pos <= 40) {
             if (searchType === 'and') {
                 await assignToAvailableRobot(url, keywords);
             } else {

@@ -29,9 +29,11 @@ class Tokenizer {
   // Converts a relative link to an absolute link using the base URL
   toAbsoluteURL(base, relative) {
     try {
-      return new URL(relative, base).href;
+      const absoluteURL = new URL(relative, base).href;
+      // Return the absolute URL only if the relative URL is successfully converted
+      return absoluteURL.startsWith('http') ? absoluteURL : null;
     } catch (e) {
-      return relative; // If URL parsing fails, return the relative URL
+      return null; // If URL parsing fails, return null to indicate invalid/relative URL
     }
   }
 
@@ -71,7 +73,9 @@ class Tokenizer {
           const anchorMatch = this.currentTag.match(/<a[^>]*href="([^"]*)"/i);
           if (anchorMatch) {
             const absoluteLink = this.toAbsoluteURL(this.baseURL, anchorMatch[1]);
-            links.push(absoluteLink);
+            if (absoluteLink) { // Only add valid absolute URLs
+              links.push(absoluteLink);
+            }
           }
 
           // Check if current tag is for description content (title, h1-h6, p, span)
