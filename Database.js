@@ -40,28 +40,32 @@ class Database {
     // Methods for roboturl table
     // Method to update robot URL table only if the URL is not already present
     updateRobot(weburl) {
-        // First, check if the URL already exists in the table
+        // Check if the URL already exists in the robotUrl table
         const queryCheck = 'SELECT COUNT(*) AS count FROM robotUrl WHERE url = ?';
+        
+        // Execute the check query
         this.databaseDetails.query(queryCheck, [weburl], (err, results) => {
             if (err) {
-                console.log('Error checking for URL existence:', err);
+                console.error('Error checking for URL existence:', err);
+                return;
+            }
+    
+            // Proceed only if the URL does not already exist
+            if (results[0].count === 0) {
+                // Insert the URL into the robotUrl table
+                const queryInsert = 'INSERT INTO robotUrl (url) VALUES (?)';
+                this.databaseDetails.query(queryInsert, [weburl], (err) => {
+                    if (err) {
+                        console.error('Error updating the robotUrl table:', err);
+                    } else {
+                        console.log('Database updated with new URL:', weburl);
+                    }
+                });
             } else {
-                if (results[0].count === 0) {
-                    // If the URL is not found, insert it into the table
-                    const queryInsert = 'INSERT INTO robotUrl (url) VALUES (?)';
-                    this.databaseDetails.query(queryInsert, [weburl], (err) => {
-                        if (err) {
-                            console.log('Error updating the robotUrl:', err);
-                        } else {
-                            console.log('Database updated with new URL.');
-                        }
-                    });
-                } else {
-                    console.log('URL already exists in the database.');
-                }
+                console.log('URL already exists in the database:', weburl);
             }
         });
-    }
+    }    
 
 
     // Method to get robot URLs from the database using Promises
@@ -70,7 +74,7 @@ class Database {
         return new Promise((resolve, reject) => {
             this.databaseDetails.query(query, [pos], (err, results) => {
                 if (err) {
-                    return reject(error);
+                    return reject(err);
                 }
                 // Resolve with the URL or null if not found
                 const url = results.length > 0 ? results[0].url : null;
@@ -145,6 +149,23 @@ class Database {
             })
         })
     }
+
+    async checkpos() {
+        return new Promise((resolve, reject) => {
+            this.databaseDetails.query('SELECT MAX(pos) AS maxPos FROM robotUrl', (err, result) => {
+                if (err) {
+                    console.error('Error querying the max position:', err);
+                    return reject(err);
+                }
+    
+                // Extract the maxPos value from the result
+                const maxPos = result[0].maxPos;
+                // If maxPos is null (no rows), return 0 as the default value
+                resolve(maxPos !== null ? maxPos : 0);
+            });
+        });
+    }
+    
 }
 
 module.exports = Database;

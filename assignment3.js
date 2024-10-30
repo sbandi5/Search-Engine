@@ -7,6 +7,8 @@ const puppeteer = require('./puppeteer.js');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const Tokenizer = require('./tokenizer.js');
+const tokenizer = new Tokenizer();
 app.set('view engine', 'ejs');
 
 app.set('views', path.join('/var/www/html/assignment3/', 'views'));
@@ -33,7 +35,6 @@ const startingurls = [
     'https://umich.edu/', 
     'https://www.mlive.com/'
 ];
-
 for (let url of startingurls) {
     databaseConnection.updateRobot(url);
 }
@@ -112,18 +113,16 @@ function sortAccordingTORank() {
 app.get('/', async function (req, res) {
     const keywords = req.query.keywords;
     const searchType = req.query.searchType;
-
     // Clear old results on each new request
     urlarr = [];
     keywordOccuranceInUrl = [];
     currentKeyWord = [];
-
     try {
         // Fetch URLs from the database
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
-
-        while (url != null && pos <= 20) {
+	const poscheck =  await databaseConnection.checkpos() <= tokenizer.n;
+        while (url != null && poscheck) {
             if (searchType === 'and') {
                 await assignToAvailableRobot(url, keywords);
             } else {
