@@ -24,20 +24,9 @@ const robot7 = new Robot();
 const robot8 = new Robot();
 const robot9 = new Robot();
 const robot10 = new Robot();
-const robots = [robot1, robot2, robot3,robot4,robot5,robot6,robot7,robot8,robot9,robot10];
+const robots = [robot1, robot2, robot3, robot4, robot5, robot6, robot7, robot8, robot9, robot10];
 const databaseConnection = Database.getInstance();
-databaseConnection.connect();
-databaseConnection.emptyRobot();
-databaseConnection.emptyUrlDescription();
-databaseConnection.emptyUrlKeyword();
-const startingurls = [
-    'https://www.emich.edu/', 
-    'https://umich.edu/', 
-    'https://www.mlive.com/'
-];
-for (let url of startingurls) {
-    databaseConnection.updateRobot(url);
-}
+
 // Load certificate files with error handling
 let certs;
 try {
@@ -110,18 +99,39 @@ function sortAccordingTORank() {
     }
 }
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.get('/', async function (req, res) {
     const keywords = req.query.keywords;
     const searchType = req.query.searchType;
+
     // Clear old results on each new request
     urlarr = [];
     keywordOccuranceInUrl = [];
     currentKeyWord = [];
+
     try {
-        // Fetch URLs from the database
+        // Clear database tables before processing new requests
+        await databaseConnection.emptyRobot();
+        await databaseConnection.emptyUrlDescription();
+        await databaseConnection.emptyUrlKeyword();
+
+        // Update with initial URLs after clearing tables
+        const startingurls = [
+            'https://www.emich.edu/',
+            'https://umich.edu/',
+            'https://www.mlive.com/'
+        ];
+        for (let url of startingurls) {
+            await databaseConnection.updateRobot(url);
+        }
+	await delay(1000);
+        // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
-	const poscheck =  await databaseConnection.checkpos() <= tokenizer.n;
+        const poscheck = await databaseConnection.checkpos() <= tokenizer.n;
         while (url != null && poscheck) {
             if (searchType === 'and') {
                 await assignToAvailableRobot(url, keywords);
@@ -137,9 +147,9 @@ app.get('/', async function (req, res) {
 
         // Update keyword occurrences in the database
         for (let i = 0; i < urlarr.length; i++) {
-            databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
+            await databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
         }
-        
+
         // Fetch and render search results
         const searchResults = await databaseConnection.SearchResultsQuery();
         res.render('SearchEngine', { results: searchResults });
@@ -150,9 +160,9 @@ app.get('/', async function (req, res) {
     }
 });
 
+
 // Create an HTTPS server and start listening on the port
 https.createServer(certs, app).listen(12346, () => {
     console.log('Listening on port 12346');
 });
-
 
