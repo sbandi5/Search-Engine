@@ -57,12 +57,8 @@ class Database {
                 this.databaseDetails.query(queryInsert, [weburl], (err) => {
                     if (err) {
                         console.error('Error updating the robotUrl table:', err);
-                    } else {
-                        console.log('Database updated with new URL:', weburl);
                     }
                 });
-            } else {
-                console.log('URL already exists in the database:', weburl);
             }
         });
     }    
@@ -140,14 +136,14 @@ class Database {
     }
 
     async SearchResultsQuery(){
-        return new Promise((resolve, reject) => {
-            this.databaseDetails.query('select uk.url,ud.description,uk.rank from urlKeyword uk JOIN urlDescription ud ON uk.url = ud.url',(err,results)=>{
-                if (err) {
-                    return reject(err);
-                }
-                resolve(results);
-            })
-        })
+    	return new Promise((resolve, reject) => {
+        	this.databaseDetails.query('SELECT uk.url, ud.description, uk.rank FROM urlKeyword uk JOIN urlDescription ud ON uk.url = ud.url ORDER BY uk.rank DESC', (err, results) => {
+                	if (err) {
+                    		return reject(err);
+                	}
+                	resolve(results);
+      		})
+    	});
     }
 
     async checkpos() {

@@ -17,14 +17,8 @@ const puppeteerRobot = new puppeteer();
 const robot1 = new Robot();
 const robot2 = new Robot();
 const robot3 = new Robot();
-const robot4 = new Robot();
-const robot5 = new Robot();
-const robot6 = new Robot();
-const robot7 = new Robot();
-const robot8 = new Robot();
-const robot9 = new Robot();
-const robot10 = new Robot();
-const robots = [robot1, robot2, robot3, robot4, robot5, robot6, robot7, robot8, robot9, robot10];
+
+const robots = [robot1, robot2, robot3];
 const databaseConnection = Database.getInstance();
 
 // Load certificate files with error handling
@@ -48,11 +42,11 @@ async function assignToAvailableRobot(url, keyword) {
     let assigned = false;
 
     if (url.includes('emich.edu')) {
-        console.log(`Assigning URL: ${url} to Puppeteer.`);
-        let keyOccurrences = await puppeteerRobot.parseWebsite(url, keyword);
+	console.log(`Assigning URL: ${url} to Puppeteer.`);
+        let {keywordRank,extractedKeywords} = await puppeteerRobot.parseWebsite(url, keyword);
         urlarr.push(url);
-        keywordOccuranceInUrl.push(keyOccurrences);
-        currentKeyWord.push(keyword);
+        keywordOccuranceInUrl.push(keywordRank);
+        currentKeyWord.push(extractedKeywords);
         sortAccordingTORank(); // Sort after adding new occurrences
         return;
     }
@@ -61,17 +55,17 @@ async function assignToAvailableRobot(url, keyword) {
         for (let robot of robots) {
             if (!robot.isBusy) { // Check if the robot is not busy
                 console.log(`Assigning URL: ${url} to a robot.`);
-                let keyOccurances = await robot.parseWebsite(url, keyword); // Assign the URL to the robot
+                let {keywordRank,extractedKeywords} = await robot.parseWebsite(url, keyword); // Assign the URL to the robot
                 urlarr.push(url);
-                keywordOccuranceInUrl.push(keyOccurances);
-                currentKeyWord.push(keyword);
+                keywordOccuranceInUrl.push(keywordRank);
+                currentKeyWord.push(extractedKeywords);
                 sortAccordingTORank(); // Sort after adding new occurrences
                 assigned = true;
                 break;
             }
         }
         if (!assigned) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retrying
+            await delay(50);
         }
     }
 }
@@ -127,12 +121,11 @@ app.get('/', async function (req, res) {
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	await delay(1000);
+	await delay(500);
         // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
-        const poscheck = await databaseConnection.checkpos() <= tokenizer.n;
-        while (url != null && poscheck) {
+        while (url != null && await databaseConnection.checkpos() <= tokenizer.n) {
             if (searchType === 'and') {
                 await assignToAvailableRobot(url, keywords);
             } else {
@@ -152,6 +145,9 @@ app.get('/', async function (req, res) {
 
         // Fetch and render search results
         const searchResults = await databaseConnection.SearchResultsQuery();
+	for(let result =0; result< searchResults.length;result++){
+		console.log('the search results are: '+searchResults[result].url+' , '+ searchResults[result].description +' , '+ searchResults[result].rank+ ' \n')
+	}
         res.render('SearchEngine', { results: searchResults });
 
     } catch (err) {
@@ -162,7 +158,7 @@ app.get('/', async function (req, res) {
 
 
 // Create an HTTPS server and start listening on the port
-https.createServer(certs, app).listen(12346, () => {
-    console.log('Listening on port 12346');
+https.createServer(certs, app).listen(12345, () => {
+    console.log('Listening on port 12345');
 });
 

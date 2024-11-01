@@ -11,13 +11,14 @@ class PuppeteerRobot {
         this.databaseconnection.connect();
         this.url = [];
         this.keywordInUrl = [];
-        this.keywordRank = 0;
+        //this.keywordRank = 0;
     }
 
     async parseWebsite(Weburl, keywords) {
         this.isBusy = true;
         let browser;
-        
+	let keywordRank = 0;
+        let extractedKeywords = '';
         try {
             browser = await puppeteer.launch({
 		args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -30,16 +31,9 @@ class PuppeteerRobot {
             let root = html_parser.parse(content);
 
             // Process the input using the Tokenizer
-            let { description, keywordCount, links } = this.t.processInput(root.toString(), keywords);
-            this.keywordRank = keywordCount;
-            console.log(`The number of times '${keywords}' occurred in '${Weburl}' is ${keywordCount}\n`);
-            console.log('Description:', description, '\n');
-            
-            // Store the extracted links in the database
-            for (let i = 0; i < links.length; i++) {
-                this.databaseconnection.updateRobot(links[i]);
-            }
-
+            let { description, keywordCount, keywordsString } = await this.t.processInput(root.toString(), keywords,Weburl);
+            keywordRank = keywordCount;
+	    extractedKeywords = keywordsString;
             // Store the description in the database
             this.databaseconnection.updateUrlDescription(Weburl, description);
         } catch (error) {
@@ -49,7 +43,7 @@ class PuppeteerRobot {
                 await browser.close();
             }
             this.isBusy = false;
-            return this.keywordRank;
+            return {keywordRank, extractedKeywords};
         }
     }
 }
