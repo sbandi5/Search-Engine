@@ -65,7 +65,7 @@ async function assignToAvailableRobot(url, keyword) {
             }
         }
         if (!assigned) {
-            await delay(50);
+            await delay(10);
         }
     }
 }
@@ -98,6 +98,7 @@ function delay(ms) {
 }
 
 app.get('/', async function (req, res) {
+    databaseConnection.connect();
     const keywords = req.query.keywords;
     const searchType = req.query.searchType;
 
@@ -114,14 +115,14 @@ app.get('/', async function (req, res) {
 
         // Update with initial URLs after clearing tables
         const startingurls = [
-            'https://www.emich.edu/',
-            'https://umich.edu/',
-            'https://www.mlive.com/'
+            'https://www.whitehouse.gov',
+            'http://www.wayne.edu',
+            'http://www.cnn.com/'
         ];
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	await delay(500);
+	await delay(250);
         // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
@@ -153,6 +154,8 @@ app.get('/', async function (req, res) {
     } catch (err) {
         console.error("Error during processing:", err);
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
+    }finally{
+	databaseConnection.disconnect();
     }
 });
 

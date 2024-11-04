@@ -8,13 +8,7 @@ class Database {
         if (Database.#instance) {
             throw new Error('Use Database.getInstance() instead of new.');
         }
-
-        this.databaseDetails = mysql.createConnection({
-            host: 'localhost',
-            user: 'COSC631',
-            password: 'COSC631',
-            database: 'SearchEngine'
-        });
+        this.databaseDetails = null; // Initialize without a connection
     }
 
     // Static method to get the singleton instance
@@ -27,6 +21,13 @@ class Database {
 
     // Method to connect to the database
     connect() {
+        this.databaseDetails = mysql.createConnection({
+            host: 'localhost',
+            user: 'COSC631',
+            password: 'COSC631',
+            database: 'SearchEngine'
+        });
+
         this.databaseDetails.connect(err => {
             if (err) {
                 console.error('Database connection failed:', err);
@@ -35,6 +36,20 @@ class Database {
                 console.log('Database connected');
             }
         });
+    }
+
+    // Method to disconnect from the database
+    disconnect() {
+        if (this.databaseDetails) {
+            this.databaseDetails.end(err => {
+                if (err) {
+                    console.error('Error disconnecting from the database:', err);
+                } else {
+                    console.log('Database disconnected');
+                }
+            });
+            this.databaseDetails = null;
+        }
     }
 
     // Methods for roboturl table
