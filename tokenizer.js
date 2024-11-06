@@ -119,10 +119,11 @@ class Tokenizer {
             }
             i--;
 
+            // Extract keywords with filtering conditions
             const tagWords = tagContent.split(/\s+/);
             for (let word of tagWords) {
               word = word.trim().toLowerCase();
-              if (word.length > 3 && !keywordSet.has(word)) {
+              if (word.length > 3 && word.length < 30 && !keywordSet.has(word)) { // Avoid overly long words
                 keywords.push(word);
                 keywordSet.add(word);
                 if (keywords.length >= this.k) break;
@@ -144,7 +145,7 @@ class Tokenizer {
           }
 
           const word = this.token.toLowerCase().trim();
-          if (word.length > 3 && keywords.length < this.k && !keywordSet.has(word)) {
+          if (word.length > 3 && word.length < 30 && keywords.length < this.k && !keywordSet.has(word)) {
             keywords.push(word);
             keywordSet.add(word);
           }
@@ -164,8 +165,11 @@ class Tokenizer {
     if (this.description.length > this.maxLen) {
       this.description = this.description.substring(0, this.maxLen).trim();
     }
+
+    // Limit final keywords to this.k and log output for debugging
     keywords = keywords.slice(0, this.k);
-    console.log('The value of keyword before passing: ' + keywordCount);
+    console.log('The value of keyword before passing:', keywordCount);
+
     return {
       description: this.description.trim(),
       keywordCount,
