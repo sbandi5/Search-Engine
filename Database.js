@@ -192,8 +192,8 @@ class Database {
         });
     }
     async makeRankZero() {
-        const query = 'update into urlKeyword(rank) values (0) ';
-        this.databaseDetails.query(query, err => {
+        const query = 'UPDATE urlKeyword SET rank = ? ';
+        this.databaseDetails.query(query,[0], err => {
             if (err) {
                 console.error('Error updating the Rank in urlKeyword:', err);
             }
