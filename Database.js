@@ -100,9 +100,7 @@ class Database {
         this.databaseDetails.query(query, [url, keyword, rank], err => {
             if (err) {
                 console.error('Error updating the urlKeyword:', err);
-            } else {
-                console.log('Successfully updated the urlKeyword');
-            }
+            } 
         });
     }
     emptyRobot() {
@@ -144,8 +142,6 @@ class Database {
         this.databaseDetails.query(query, [url, description], err => {
             if (err) {
                 console.error('Error updating the urlDescription:', err);
-            } else {
-                console.log('Successfully updated the urlDescription');
             }
         });
     }
@@ -176,7 +172,33 @@ class Database {
             });
         });
     }
-    
+    getUrlKeywordContents(){
+	return new Promise((resolve, reject) => {
+            this.databaseDetails.query('SELECT * from urlKeyword', (err, results) => {
+                if (err) {
+                    console.error('Error querying the max position:', err);
+                    return reject(err);
+                }
+                resolve(results);
+            });
+        });
+    }
+     updateRank(url, rank) {
+        const query = 'UPDATE urlKeyword SET `rank` = ? WHERE url = ?';
+        this.databaseDetails.query(query, [rank, url], err => {
+            if (err) {
+                console.error('Error updating the Rank in urlKeyword:', err);
+            }
+        });
+    }
+    async makeRankZero() {
+        const query = 'update into urlKeyword(rank) values (0) ';
+        this.databaseDetails.query(query, err => {
+            if (err) {
+                console.error('Error updating the Rank in urlKeyword:', err);
+            }
+        });
+    }
 }
 
 module.exports = Database;

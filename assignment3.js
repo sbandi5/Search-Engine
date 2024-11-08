@@ -33,9 +33,6 @@ try {
     process.exit(1); // Exit process if the certificates are not available
 }
 
-let urlarr = [];
-let keywordOccuranceInUrl = [];
-let currentKeyWord = [];
 
 // Function to find an available robot (wait until one is free)
 async function assignToAvailableRobot(url, keyword) {
@@ -43,23 +40,18 @@ async function assignToAvailableRobot(url, keyword) {
 
     if (url.includes('emich.edu')) {
 	console.log(`Assigning URL: ${url} to Puppeteer.`);
-        let {keywordRank,extractedKeywords} = await puppeteerRobot.parseWebsite(url, keyword);
-        urlarr.push(url);
-        keywordOccuranceInUrl.push(keywordRank);
-        currentKeyWord.push(extractedKeywords);
-        sortAccordingTORank(); // Sort after adding new occurrences
+        await puppeteerRobot.parseWebsite(url, keyword);
+        //urlarr.push(url);
+        //keywordOccuranceInUrl.push(keywordRank);
+        //currentKeyWord.push(extractedKeywords);
+        //sortAccordingTORank(); // Sort after adding new occurrences
         return;
     }
     // Avoid indefinite loop; use setTimeout for retries instead of blocking
     while (!assigned) {
         for (let robot of robots) {
             if (!robot.isBusy) { // Check if the robot is not busy
-                console.log(`Assigning URL: ${url} to a robot.`);
-                let {keywordRank,extractedKeywords} = await robot.parseWebsite(url, keyword); // Assign the URL to the robot
-                urlarr.push(url);
-                keywordOccuranceInUrl.push(keywordRank);
-                currentKeyWord.push(extractedKeywords);
-                sortAccordingTORank(); // Sort after adding new occurrences
+                await robot.parseWebsite(url, keyword); // Assign the URL to the robot
                 assigned = true;
                 break;
             }
@@ -70,28 +62,26 @@ async function assignToAvailableRobot(url, keyword) {
     }
 }
 
-// Sort URLs according to the number of keyword occurrences in descending order
-function sortAccordingTORank() {
-    for (let i = 0; i < keywordOccuranceInUrl.length - 1; i++) {
-        for (let j = i + 1; j < keywordOccuranceInUrl.length; j++) {
-            if (keywordOccuranceInUrl[i] < keywordOccuranceInUrl[j]) {
-                // Sorting according to the keyword occurrences
-                let temp = keywordOccuranceInUrl[i];
-                keywordOccuranceInUrl[i] = keywordOccuranceInUrl[j];
-                keywordOccuranceInUrl[j] = temp;
 
-                // Sorting the URL as well
-                temp = urlarr[i];
-                urlarr[i] = urlarr[j];
-                urlarr[j] = temp;
+async function assignToAvailableRobotForKeyword(url) {
+    let assigned = false;
 
-                temp = currentKeyWord[i];
-                currentKeyWord[i] = currentKeyWord[j];
-                currentKeyWord[j] = temp;
+    if (url.includes('emich.edu')) {
+        console.log(`Assigning URL: ${url} to Puppeteer.`);
+        await puppeteerRobot.parseWebsite(url, keyword);
+        return;
+    }
+    while (!assigned) {
+        for (let robot of robots) {
+            if (!robot.isBusy) { // Check if the robot is not busy
+                await robot.parseWebsiteForKeyword(url); // Assign the URL to the robot
+                assigned = true;
+                break;
             }
         }
     }
 }
+
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -102,12 +92,9 @@ app.get('/', async function (req, res) {
     const keywords = req.query.keywords;
     const searchType = req.query.searchType;
 
-    // Clear old results on each new request
-    urlarr = [];
-    keywordOccuranceInUrl = [];
-    currentKeyWord = [];
 
     try {
+	/*
         // Clear database tables before processing new requests
         await databaseConnection.emptyRobot();
         await databaseConnection.emptyUrlDescription();
@@ -122,33 +109,39 @@ app.get('/', async function (req, res) {
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	await delay(250);
+	await delay(1000);
         // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
-        while (url != null && await databaseConnection.checkpos() <= tokenizer.n) {
-            if (searchType === 'and') {
-                await assignToAvailableRobot(url, keywords);
-            } else {
-                let keywordsArr = keywords.split(' ');
-                for (let keyword of keywordsArr) {
-                    await assignToAvailableRobot(url, keyword);
-                }
-            }
-            pos++;
-            url = await databaseConnection.getRobot(pos); // Fetch the next URL
-        }
+        while(url != null && pos <= tokenizer.n){
+		await assignToAvailableRobotForKeyword(url);
+		pos++;
+                url = await databaseConnection.getRobot(pos);
+	}
+	console.log('succesfully executed till this point without any error');
+*/		
+	await databaseConnection.makeRankZero();
+	pos =1;
+	url = await databaseConnection.getRobot(pos);
+	let afterUrlGotKeywords = await databaseConnection.getUrlKeywordContents();
+	for (const result of afterUrlGotKeywords) {
+    	    if (searchType === 'and' && result.keywords.includes(keywords)) {
+        	await assignToAvailableRobot(url, keywords);
+    	    } else {
+        	let keywordsArr = keywords.split(' ');
+        	for (let keyword of keywordsArr) {
+            	    if (result.keywords.includes(keyword)) {
+                	await assignToAvailableRobot(url, keyword);
+            	    }
+        	}
+    	    }
+    	    pos++;
+            url = await databaseConnection.getRobot(pos);
+	}
 
-        // Update keyword occurrences in the database
-        for (let i = 0; i < urlarr.length; i++) {
-            await databaseConnection.updateUrlKeyword(urlarr[i], currentKeyWord[i], keywordOccuranceInUrl[i]);
-        }
 
         // Fetch and render search results
         const searchResults = await databaseConnection.SearchResultsQuery();
-	for(let result =0; result< searchResults.length;result++){
-		console.log('the search results are: '+searchResults[result].url+' , '+ searchResults[result].description +' , '+ searchResults[result].rank+ ' \n')
-	}
         res.render('SearchEngine', { results: searchResults });
 
     } catch (err) {

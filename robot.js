@@ -21,22 +21,32 @@ class Robot {
             let response = await axios.get(Weburl);
             let root = html_parser.parse(response.data);
     
-            // Validate root parsing and output data
-            let { description, keywordCount, keywordsString } =  await this.t.processInput(root.toString(), keywords, Weburl);
-            
-            keywordRank = keywordCount || 0; // Handle undefined or null counts
-            extractedKeywords = keywordsString;
-            this.databaseconnection.updateUrlDescription(Weburl, description);
-    
+	    let rank = this.t.countKeywordOccurrences(root.toString(), keywords);
+    	    this.databaseconnection.updateRank(Weburl, rank);
         } catch (error) {
             console.error("Error fetching the website:", error);
         } finally {
             this.isBusy = false;
-            return {keywordRank,extractedKeywords};
         }
     }
     
+    async parseWebsiteForKeyword(Weburl) {
+        this.isBusy = true;
+        try {
+            let response = await axios.get(Weburl);
+            let root = html_parser.parse(response.data);
 
+            // Validate root parsing and output data
+            let { description, keywordsString }   =  await this.t.processInput(root.toString(), Weburl);
+	    this.databaseconnection.updateUrlDescription(Weburl, description);
+            this.databaseconnection.updateUrlKeyword(Weburl, keywordsString,0);
+
+        } catch (error) {
+            console.error("Error fetching the website:", error);
+        } finally {
+            this.isBusy = false;
+        }
+    }
 }
 
 module.exports = Robot;
