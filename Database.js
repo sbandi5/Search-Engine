@@ -184,7 +184,7 @@ class Database {
         });
     }
      updateRank(url, rank) {
-        const query = 'UPDATE urlKeyword SET `rank` = ? WHERE url = ?';
+        const query = 'UPDATE urlKeyword SET `rank` = `rank` + ? WHERE url = ?';
         this.databaseDetails.query(query, [rank, url], err => {
             if (err) {
                 console.error('Error updating the Rank in urlKeyword:', err);
@@ -192,7 +192,7 @@ class Database {
         });
     }
     async makeRankZero() {
-        const query = 'UPDATE urlKeyword SET rank = ? ';
+        const query = 'UPDATE urlKeyword SET `rank` = ? ';
         this.databaseDetails.query(query,[0], err => {
             if (err) {
                 console.error('Error updating the Rank in urlKeyword:', err);
