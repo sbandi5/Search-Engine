@@ -117,14 +117,26 @@ app.get('/', async function (req, res) {
 	console.log('succesfully executed till this point without any error');
 */		
 	await databaseConnection.makeRankZero();
-	pos =1;
-	url = await databaseConnection.getRobot(pos);
+	pos = 1;
+	let url = await databaseConnection.getRobot(pos);
 	let afterUrlGotKeywords = await databaseConnection.getUrlKeywordContents();
+	let keywordsArr = keywords.split(' ');
+
 	for (const result of afterUrlGotKeywords) {
-    	    if (searchType === 'and' && result.keywords.includes(keywords)) {
+    // Remove surrounding double quotes if present
+    	    if (keywords[0] === '"' && keywords[keywords.length - 1] === '"') {
+        	keywords = keywords.replaceAll('"', '');
         	await assignToAvailableRobot(url, keywords);
+    	    } else if (searchType === 'and' && result.keywords.includes(keywords)) {
+        // Check if all elements of `keywordsArr` are present in `result.keywords`
+            	if (keywordsArr.every(substring => result.keywords.includes(substring))) {
+            // Assign each keyword individually to `assignToAvailableRobot`
+            	    for (let keyword of keywordsArr) {
+                	await assignToAvailableRobot(url, keyword);
+            	    }
+        	}
     	    } else {
-        	let keywordsArr = keywords.split(' ');
+        // Check individual keywords when `searchType` is not 'and'
         	for (let keyword of keywordsArr) {
             	    if (result.keywords.includes(keyword)) {
                 	await assignToAvailableRobot(url, keyword);
@@ -132,7 +144,7 @@ app.get('/', async function (req, res) {
         	}
     	    }
     	    pos++;
-            url = await databaseConnection.getRobot(pos);
+    	    url = await databaseConnection.getRobot(pos);
 	}
 
 
