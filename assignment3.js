@@ -41,10 +41,6 @@ async function assignToAvailableRobot(url, keyword) {
     if (url.includes('emich.edu')) {
 	console.log(`Assigning URL: ${url} to Puppeteer.`);
         await puppeteerRobot.parseWebsite(url, keyword);
-        //urlarr.push(url);
-        //keywordOccuranceInUrl.push(keywordRank);
-        //currentKeyWord.push(extractedKeywords);
-        //sortAccordingTORank(); // Sort after adding new occurrences
         return;
     }
     // Avoid indefinite loop; use setTimeout for retries instead of blocking
@@ -157,4 +153,3 @@ app.get('/', async function (req, res) {
 https.createServer(certs, app).listen(12345, () => {
     console.log('Listening on port 12345');
 });
-

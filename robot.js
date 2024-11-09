@@ -10,18 +10,15 @@ class Robot {
         this.databaseconnection.connect();
         this.url = [];
         this.keywordInUrl = [];
-//        this.keywordRank = 0;
     }
 
     async parseWebsite(Weburl, keywords) {
         this.isBusy = true;
-    	let keywordRank = 0;
-	let extractedKeywords = '';
         try {
             let response = await axios.get(Weburl);
             let root = html_parser.parse(response.data);
     
-	    let rank = this.t.countKeywordOccurrences(root.toString(), keywords);
+	        let rank = this.t.countKeywordOccurrences(root.toString(), keywords);
     	    this.databaseconnection.updateRank(Weburl, rank);
         } catch (error) {
             console.error("Error fetching the website:", error);

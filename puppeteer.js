@@ -11,31 +11,25 @@ class PuppeteerRobot {
         this.databaseconnection.connect();
         this.url = [];
         this.keywordInUrl = [];
-        //this.keywordRank = 0;
     }
 
     async parseWebsite(Weburl, keywords) {
         this.isBusy = true;
         let browser;
-	let keywordRank = 0;
-        let extractedKeywords = '';
         try {
             browser = await puppeteer.launch({
-		args: ['--no-sandbox', '--disable-setuid-sandbox']
-	    });
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
             const page = await browser.newPage();
             await page.goto(Weburl, { waitUntil: 'domcontentloaded' });
 
-            // Get the page content
+            // Get the page content and parse it
             const content = await page.content();
-            let root = html_parser.parse(content);
-
-            // Process the input using the Tokenizer
-            let { description, keywordCount, keywordsString } = await this.t.processInput(root.toString(), keywords,Weburl);
-            keywordRank = keywordCount;
-	    extractedKeywords = keywordsString;
-            // Store the description in the database
-            this.databaseconnection.updateUrlDescription(Weburl, description);
+            const root = html_parser.parse(content);
+            
+            // Count keyword occurrences and update rank in the database
+            const rank = this.t.countKeywordOccurrences(root.toString(), keywords);
+            this.databaseconnection.updateRank(Weburl, rank);
         } catch (error) {
             console.error("Error fetching the website using Puppeteer:", error);
         } finally {
@@ -43,7 +37,36 @@ class PuppeteerRobot {
                 await browser.close();
             }
             this.isBusy = false;
-            return {keywordRank, extractedKeywords};
+        }
+    }
+
+    async parseWebsiteForKeyword(Weburl) {
+        this.isBusy = true;
+        let browser;
+        try {
+            browser = await puppeteer.launch({
+                args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+            const page = await browser.newPage();
+            await page.goto(Weburl, { waitUntil: 'domcontentloaded' });
+
+            // Get the page content and parse it
+            const content = await page.content();
+            const root = html_parser.parse(content);
+
+            // Process content with Tokenizer to extract description and keywords
+            const { description, keywordsString } = await this.t.processInput(root.toString(), Weburl);
+            
+            // Update the database with description and keywords
+            this.databaseconnection.updateUrlDescription(Weburl, description);
+            this.databaseconnection.updateUrlKeyword(Weburl, keywordsString, 0);
+        } catch (error) {
+            console.error("Error fetching the website using Puppeteer:", error);
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+            this.isBusy = false;
         }
     }
 }
