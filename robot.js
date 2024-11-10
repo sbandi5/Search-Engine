@@ -11,7 +11,6 @@ class Robot {
         this.url = [];
         this.keywordInUrl = [];
     }
-
     async parseWebsite(Weburl, keywords) {
         this.isBusy = true;
         try {
@@ -22,7 +21,7 @@ class Robot {
     	    this.databaseconnection.updateRank(Weburl, rank);
         } catch (error) {
             console.error("Error fetching the website:", error);
-        } finally {
+	} finally {
             this.isBusy = false;
         }
     }

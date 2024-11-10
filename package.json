@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@playwright/test": "^1.48.2",
     "axios": "^1.7.7",
     "ejs": "^3.1.10",
     "express": "^4.21.0",
@@ -7,7 +8,6 @@
     "https": "^1.0.0",
     "mysql2": "^3.11.3",
     "node-html-parser": "^6.1.13",
-    "path": "^0.12.7",
-    "puppeteer": "^23.6.1"
+    "path": "^0.12.7"
   }
 }

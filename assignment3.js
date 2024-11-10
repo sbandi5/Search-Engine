@@ -64,7 +64,7 @@ async function assignToAvailableRobotForKeyword(url) {
 
     if (url.includes('emich.edu')) {
         console.log(`Assigning URL: ${url} to Puppeteer.`);
-        await puppeteerRobot.parseWebsite(url, keyword);
+        await puppeteerRobot.parseWebsiteForKeyword(url);
         return;
     }
     while (!assigned) {
@@ -90,7 +90,7 @@ app.get('/', async function (req, res) {
 
 
     try {
-	/*
+	
         // Clear database tables before processing new requests
         await databaseConnection.emptyRobot();
         await databaseConnection.emptyUrlDescription();
@@ -105,7 +105,8 @@ app.get('/', async function (req, res) {
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	await delay(1000);
+	await databaseConnection.updateRobot('https://www.emich.edu');
+	await delay(10000);
         // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
@@ -115,7 +116,7 @@ app.get('/', async function (req, res) {
                 url = await databaseConnection.getRobot(pos);
 	}
 	console.log('succesfully executed till this point without any error');
-*/		
+/*		
 	await databaseConnection.makeRankZero();
 	pos = 1;
 	let url = await databaseConnection.getRobot(pos);
@@ -151,7 +152,7 @@ app.get('/', async function (req, res) {
         // Fetch and render search results
         const searchResults = await databaseConnection.SearchResultsQuery();
         res.render('SearchEngine', { results: searchResults });
-
+*/
     } catch (err) {
         console.error("Error during processing:", err);
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
