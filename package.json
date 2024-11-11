@@ -8,6 +8,11 @@
     "https": "^1.0.0",
     "mysql2": "^3.11.3",
     "node-html-parser": "^6.1.13",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "playwright": "^1.48.2",
+    "playwright-extra": "^4.3.6",
+    "playwright-extra-plugin-stealth": "^0.0.1",
+    "puppeteer-extra-plugin-recaptcha": "^3.6.8",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   }
 }

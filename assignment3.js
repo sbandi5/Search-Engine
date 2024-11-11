@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 const Database = require('./Database.js');
 const Robot = require('./robot.js');
-const puppeteer = require('./puppeteer.js');
+const playWright = require('./playwright.js');
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
@@ -13,7 +13,7 @@ app.set('view engine', 'ejs');
 
 app.set('views', path.join('/var/www/html/assignment3/', 'views'));
 
-const puppeteerRobot = new puppeteer();
+const playWrightRobot = new playWright();
 const robot1 = new Robot();
 const robot2 = new Robot();
 const robot3 = new Robot();
@@ -25,8 +25,8 @@ const databaseConnection = Database.getInstance();
 let certs;
 try {
     certs = {
-        key: fs.readFileSync(path.join('/etc/ssl/', 'www.saimanikiranbandi.com_key.txt')),
-        cert: fs.readFileSync(path.join('/etc/ssl/', 'www.saimanikiranbandi.com.crt'))
+        key: fs.readFileSync(path.join('/etc/ssl/', 'www.hiranmaimuddam.com_key.txt')),
+        cert: fs.readFileSync(path.join('/etc/ssl/', 'www.hiranmaimuddam.com.crt'))
     };
 } catch (err) {
     console.error('Error reading certificate files:', err.message);
@@ -40,7 +40,7 @@ async function assignToAvailableRobot(url, keyword) {
 
     if (url.includes('emich.edu')) {
 	console.log(`Assigning URL: ${url} to Puppeteer.`);
-        await puppeteerRobot.parseWebsite(url, keyword);
+        await playWrightRobot.parseWebsite(url, keyword);
         return;
     }
     // Avoid indefinite loop; use setTimeout for retries instead of blocking
@@ -64,7 +64,7 @@ async function assignToAvailableRobotForKeyword(url) {
 
     if (url.includes('emich.edu')) {
         console.log(`Assigning URL: ${url} to Puppeteer.`);
-        await puppeteerRobot.parseWebsiteForKeyword(url);
+        await playWrightRobot.parseWebsiteForKeyword(url);
         return;
     }
     while (!assigned) {
@@ -97,6 +97,7 @@ app.get('/', async function (req, res) {
         await databaseConnection.emptyUrlKeyword();
 
         // Update with initial URLs after clearing tables
+	/*
         const startingurls = [
             'https://www.whitehouse.gov',
             'http://www.wayne.edu',
@@ -105,8 +106,9 @@ app.get('/', async function (req, res) {
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	await databaseConnection.updateRobot('https://www.emich.edu');
-	await delay(10000);
+	*/
+	await databaseConnection.updateRobot('https://www.emich.edu/');
+	await delay(1000);
         // Proceed with original processing logic
         let pos = 1;
         let url = await databaseConnection.getRobot(pos); // Fetch the first URL
@@ -163,6 +165,6 @@ app.get('/', async function (req, res) {
 
 
 // Create an HTTPS server and start listening on the port
-https.createServer(certs, app).listen(12345, () => {
-    console.log('Listening on port 12345');
+https.createServer(certs, app).listen(12346, () => {
+    console.log('Listening on port 12346');
 });
