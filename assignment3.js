@@ -90,14 +90,13 @@ app.get('/', async function (req, res) {
 
 
     try {
-	
+	/*
         // Clear database tables before processing new requests
         await databaseConnection.emptyRobot();
         await databaseConnection.emptyUrlDescription();
         await databaseConnection.emptyUrlKeyword();
 
         // Update with initial URLs after clearing tables
-	/*
         const startingurls = [
             'https://www.whitehouse.gov',
             'http://www.wayne.edu',
@@ -106,8 +105,6 @@ app.get('/', async function (req, res) {
         for (let url of startingurls) {
             await databaseConnection.updateRobot(url);
         }
-	*/
-	await databaseConnection.updateRobot('https://www.emich.edu/');
 	await delay(1000);
         // Proceed with original processing logic
         let pos = 1;
@@ -118,7 +115,7 @@ app.get('/', async function (req, res) {
                 url = await databaseConnection.getRobot(pos);
 	}
 	console.log('succesfully executed till this point without any error');
-/*		
+	*/
 	await databaseConnection.makeRankZero();
 	pos = 1;
 	let url = await databaseConnection.getRobot(pos);
@@ -141,7 +138,7 @@ app.get('/', async function (req, res) {
     	    } else {
         // Check individual keywords when `searchType` is not 'and'
         	for (let keyword of keywordsArr) {
-            	    if (result.keywords.includes(keyword)) {
+            	    if (result.keyword.includes(keyword)) {
                 	await assignToAvailableRobot(url, keyword);
             	    }
         	}
@@ -154,7 +151,7 @@ app.get('/', async function (req, res) {
         // Fetch and render search results
         const searchResults = await databaseConnection.SearchResultsQuery();
         res.render('SearchEngine', { results: searchResults });
-*/
+	
     } catch (err) {
         console.error("Error during processing:", err);
         res.status(500).send('Error fetching URLs from the database: ' + err.message);
