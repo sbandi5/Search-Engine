@@ -85,7 +85,7 @@ function delay(ms) {
 
 app.get('/', async function (req, res) {
     databaseConnection.connect();
-    const keywords = req.query.keywords;
+    let keywords = req.query.keywords;
     const searchType = req.query.searchType;
 
 
@@ -127,14 +127,12 @@ app.get('/', async function (req, res) {
     	    if (keywords[0] === '"' && keywords[keywords.length - 1] === '"') {
         	keywords = keywords.replaceAll('"', '');
         	await assignToAvailableRobot(url, keywords);
-    	    } else if (searchType === 'and' && result.keywords.includes(keywords)) {
-        // Check if all elements of `keywordsArr` are present in `result.keywords`
-            	if (keywordsArr.every(substring => result.keywords.includes(substring))) {
-            // Assign each keyword individually to `assignToAvailableRobot`
-            	    for (let keyword of keywordsArr) {
-                	await assignToAvailableRobot(url, keyword);
-            	    }
-        	}
+    	    } else if (searchType === 'and' && result.keyword.includes(keywords)) {
+ 		   // Check if every keyword in keywordsArr is present in result.keyword
+    		   if (keywordsArr.every(substring => result.keyword.includes(substring))) {
+        		// If all keywords are found, assign the URL once to an available robot
+        		await assignToAvailableRobot(url, keywordsArr.join(", "));
+    		   }
     	    } else {
         // Check individual keywords when `searchType` is not 'and'
         	for (let keyword of keywordsArr) {
