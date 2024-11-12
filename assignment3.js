@@ -127,13 +127,12 @@ app.get('/', async function (req, res) {
     	    if (keywords[0] === '"' && keywords[keywords.length - 1] === '"') {
         	keywords = keywords.replaceAll('"', '');
         	await assignToAvailableRobot(url, keywords);
-    	    } else if (searchType === 'and' && result.keyword.includes(keywords)) {
- 		   // Check if every keyword in keywordsArr is present in result.keyword
+    	    } else if (searchType === 'and') {
+ 		   // `AND` operation: ensure all keywords are present
     		   if (keywordsArr.every(substring => result.keyword.includes(substring))) {
-        		// If all keywords are found, assign the URL once to an available robot
         		await assignToAvailableRobot(url, keywordsArr.join(", "));
     		   }
-    	    } else {
+	    }else {
         // Check individual keywords when `searchType` is not 'and'
         	for (let keyword of keywordsArr) {
             	    if (result.keyword.includes(keyword)) {
